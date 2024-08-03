@@ -1,6 +1,182 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Table Style</title>
+<meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; width=device-width;">
+<style>
+body {
+  background-color: lightskyblue;
+  font-family: "Roboto", helvetica, arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+}
 
+div.table-title {
+   display: block;
+  margin: auto;
+  max-width: 600px;
+  padding:5px;
+  width: 100%;
+}
+.table-title h3 {
+   color: #fafafa;
+   font-size: 30px;
+   font-weight: 400;
+   font-style:normal;
+   font-family: "Roboto", helvetica, arial, sans-serif;
+   text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+   text-transform:uppercase;
+}
+/*** Table Styles **/
+.table-fill {
+  background: white;
+  border-radius:3px;
+  border-collapse: collapse;
+  height: 320px;
+  margin: auto;
+  max-width: 600px;
+  padding:5px;
+  width: 100%;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  animation: float 5s infinite;
+}
+ 
+th {
+  color:#D5DDE5;;
+  background:#1b1e24;
+  border-bottom:4px solid #9ea7af;
+  border-right: 1px solid #343a45;
+  font-size:23px;
+  font-weight: 100;
+  padding:24px;
+  text-align:left;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  vertical-align:middle;
+}
+
+th:first-child {
+  border-top-left-radius:3px;
+}
+ 
+th:last-child {
+  border-top-right-radius:3px;
+  border-right:none;
+}
+  
+tr {
+  border-top: 1px solid #C1C3D1;
+  border-bottom-: 1px solid #C1C3D1;
+  color:#666B85;
+  font-size:16px;
+  font-weight:normal;
+  text-shadow: 0 1px 1px rgba(256, 256, 256, 0.1);
+}
+ 
+tr:hover td {
+  background:#4E5066;
+  color:#FFFFFF;
+  border-top: 1px solid #22262e;
+}
+ 
+tr:first-child {
+  border-top:none;
+}
+
+tr:last-child {
+  border-bottom:none;
+}
+ 
+tr:nth-child(odd) td {
+  background:#EBEBEB;
+}
+ 
+tr:nth-child(odd):hover td {
+  background:#4E5066;
+}
+
+tr:last-child td:first-child {
+  border-bottom-left-radius:3px;
+}
+ 
+tr:last-child td:last-child {
+  border-bottom-right-radius:3px;
+}
+ 
+td {
+  background:#FFFFFF;
+  padding:20px;
+  text-align:left;
+  vertical-align:middle;
+  font-weight:300;
+  font-size:18px;
+  text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #C1C3D1;
+}
+
+td:last-child {
+  border-right: 0px;
+}
+
+th.text-left {
+  text-align: left;
+}
+
+th.text-center {
+  text-align: center;
+}
+
+th.text-right {
+  text-align: right;
+}
+
+td.text-left {
+  text-align: left;
+}
+
+td.text-center {
+  text-align: center;
+}
+
+td.text-right {
+  text-align: right;
+}
+</style>
+</head>
 <h1>欢迎来到 王先生的六爻世界</h1>
 <h1>  6 yao world is terrible</h1>
+
+<table class="table-fill">
+<thead>
+<tr>
+<th colspan="5" class="text-center">妻财持世</th>
+</tr>
+</thead>
+<tbody class="table-hover">
+<tr>
+<td class="text-left">天地否</td>
+<td class="text-left">泽雷随 </td>
+<td class="text-left"> 泽水困 </td>
+<td class="text-left">火雷噬嗑 </td>
+<td class="text-left">震为雷</td>
+</tr>
+<tr>
+<td class="text-left">雷水解</td>
+<td class="text-left">雷地豫 </td>
+<td class="text-left">风火家人</td>
+<td class="text-left">风雷益</td>
+<td class="text-left">水泽节</td>
+</tr>
+<tr>
+<td class="text-left">水风井</td>
+<td class="text-left">山雷颐</td>
+<td class="text-left">地雷复</td>
+<td class="text-left">地风升</td>
+<td class="text-left"> 地水师</td>
+</tr>
+</tbody>
+</table>
+
 <hr>
 <h3>四大凶卦分析</h3>
 <table border="1" >
@@ -15,8 +191,21 @@
 <h3>兄弟持世静卦</h3>
 <a href="晋静卦_Total.html" target="_blank">火地晋</a>
 <hr>
-<h3>官鬼持世</h3>
-<a href="jianjian_total.html" target="_blank">风山渐</a>
 <a href="未济之大有_Total.html" target="_blank">未济之大有</a>
+<h3>妻财持世</h3>
+<p>
+天地否   泽雷随   泽水困   火雷噬嗑   震为雷<br>
+雷水解   雷地豫   风火家人   风雷益   水泽节<br>
+水风井   山雷颐   地雷复   地风升   地水师<br>
+</p>
+<h3>子孙持世</h3>
+<p>履 无妄 夬 睽 旅 <a href="jianjian_total.html" target="_blank">风山渐</a>  需 屯 蒙 剥 谦 坤</p>
+<h3>官鬼持世</h3>
+<p>  同人   遁   萃   鼎   恒   小过   比   大畜   贲   蛊   艮   临   明夷</p>
+<h3>父母持世</h3>
+<p>   乾   姤   兑   大过   大有   大壮   归妹   丰   小畜   观 </p>
+<h3> 兄弟持世</h3>
+<p>   讼   革   咸   离   未济   晋   中孚   巽   涣   既济   坎   蹇   损   <a href="晋静卦_Total.html" target="_blank">火地晋</a> </p>
 <hr>
 <img src="https://s2.loli.net/2024/07/30/yfkDgGaxmW5rhjM.jpg" alt="sh000001_2020-02-27_D.jpg"    width="400" height="400">
+</html>
