@@ -11,7 +11,7 @@ import sixyao
 import akshare_plotly as akPlot
 import html, markdown
 
-main_ui = "db_search_v2.ui" # Enter file here.
+main_ui = "db_search2.ui" # Enter file here.
 Ui_MainWindow, QtBaseClass = uic.loadUiType(main_ui)
 insert_ui="insert_db.ui"
 Ui_MainWindow2, QtBaseClass2 = uic.loadUiType(insert_ui)
@@ -85,6 +85,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_wash.clicked.connect(self.washContent)
         self.radioButton_html.toggled.connect(self.htmlformat)
         self.act_insert_data.triggered.connect(self.openNewWindow)
+        self.spinBox.valueChanged.connect(self.displayImages)
         self.insert_mode=False
 
     def openNewWindow(self):
@@ -96,7 +97,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         connection=sqlite3.connect('Guas.db')
         cursor=connection.cursor()
         mainsql='select postTitle,guaDate, stockName,guaName,user,guaContent,CAST(rowid as text),guaSubject, cast(markdown as text) from StockGuas '
-        orderby= '  order by cast( substr(guaDate,6,2) as integer), guaDate  '
+        orderby= '  order by cast( substr(guaDate,6,2) as integer),guaDate '
         if searchmode==1:  #按照卦名搜索
             self.txtTitle.setText("")
             self.txtEndDay.setText("")
@@ -133,7 +134,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         connection.close()
 
     def displayGua(self):
-        #self.comboImg.clear()
         self.label_pic.clear()
         items=self.tableGua.selectedItems()
         self.row = self.tableGua.currentRow() 
@@ -159,22 +159,44 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.txtGuaName.setText(guaName)
         self.txtSubject.setText(guaSubject)
         self.radioButton_30d.setChecked(True)
-        #self.refreshImg()
+        self.content_md_format=guaContent
+        self.displayImages()
+
+    def displayImages(self):
+        cont=self.content_md_format
+        print("cont:",cont)
+        re1=r'images.+jpg|images.+.jpeg|images.+png'
+        images=re.findall(re1,cont)
+        num=len(images)
+        self.label_num_of_images.setText(f'{num}张图片')
+        #self.spinBox.setMinimum(0)
+        #self.spinBox.setMaximum(num-1)
+        value=self.spinBox.value()
+        if value>=num:
+            value=num-1
+        if value<0:
+            value=0
+        print("value:",value)
+        if images:
+            pixmap=QPixmap(images[value])
+        else:
+            pixmap=QPixmap("taiji.png")
+        self.label_pic.setPixmap(pixmap) 
+
 
     def htmlformat(self):
         if self.radioButton_html.isChecked():
             cont=self.content_md_format.replace("\n","\n\n")
             html_content = markdown.markdown(cont, extensions=['extra'])
             html_header='''<style>
-                        body  {color: black;  font-size: 12px; background-color: rgb(250, 240, 230);}
-                        img {width:80%; height:auto; } 
+                        body  {color: black;  font-size: 12px; background-color: rgb(255, 255, 255);}
+                        img {width:100%; height:auto; } 
                         </style>'''
             html_content=html_header+html_content
             with open("current.html", 'w',encoding="utf-8") as file:
                 file.write(html_content)
             self.browser1.load(QUrl("C:/stock6yao/current.html"))
         else:
-            #self.txtContent.setPlainText(self.content_md_format)
             self.browser1.load(QUrl("C:/stock6yao/welcome.html"))
 
     def drawpicDaily(self,days):
@@ -244,6 +266,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.loadInfo(self.mode)
         self.tableGua.setCurrentCell(self.row, 1) 
         self.content_md_format=new_content
+        self.displayImages()
 
     def insertNewRecord(self):
         #row = self.tableGua.currentRow()
@@ -271,6 +294,8 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cont=re.sub(r'.*元亨利贞网.*','',cont)
         cont=re.sub(r'出生.*性别[；：]','',cont)
         cont=re.sub(r'\n{2}',"\n",cont)
+        cont=cont.replace("?","")
+        cont=cont.replace("<br>","\n")
         self.txtContent.setPlainText(cont)
 
     def deleteWaste(self):
@@ -338,16 +363,16 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         img {width:80%; height:auto; } 
                         </style>'''
         html_content=html_header+html_content
-        outhtml = htmldir+f"{guaNameStr}_Total.html"
-        out_file_name, _ = diag.getSaveFileName(self, "保存文件", outhtml, "HTML Files (*.html);", options=options)
-        if out_file_name:
-            with open(out_file_name, 'w',encoding="utf-8") as file:
+        defaultHtml = htmldir+f"{guaNameStr}.html"
+        html_file, _ = diag.getSaveFileName(self, "保存文件", defaultHtml, "HTML Files (*.html);", options=options)
+        if html_file:
+            with open(html_file, 'w',encoding="utf-8") as file:
                 file.write(html_content)
-           # shutil.copy(file_name, file_back)
-        print("Total HTML and Markdown is finished!")
+            html_file_git="E:/git/64gua.github.io/"+os.path.basename(html_file)
+            shutil.copy(html_file, html_file_git)
+        print(html_file,html_file_git)
         # query='update StockGuas set markdown=1 where rowid={}  '.format(rowid)
             
-
     def paipan(self):
         gua=sixyao.Zhugua()
         day1=self.txtGuaDate.text()
@@ -376,25 +401,26 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.txtContent.clear()
         self.txtSubject.clear()
         self.label_pic.clear()
-        #self.btn_save_markdown.setDisabled(True)
         self.insert_mode=True
         self.btn_save_markdown.setText("插入新记录")
 
     def saveJPG(self):
         diag=QFileDialog()
         options = diag.Options()
-        mddir = "../images/"
+        mddir = "c:/stock6yao/images/"
         secNum=self.txtStockCode.text()  
         originDay=self.txtGuaDate.text()
         filename=secNum+"_"+originDay+"_"+self.drawType+".jpg"
         defaultFile=mddir+filename
         print("defaultfile is : ", defaultFile)
         newfile, _ = diag.getSaveFileName(self, "保存文件", defaultFile, "jpg Files (*.jpg);; png file(*.png)", options=options)
-        #print(newfile)
+        #newfile_git="E:/git/64gua.github.io/images/"+os.path.basename(newfile)
+        print("save jpg as :", newfile)
         if newfile:
-            src="temp.jpg"
+            src="temp100.jpg"
             shutil.copy(src, newfile)
-            print("image file is saved! ")
+            #shutil.copy(newfile,newfile_git)
+            #print(newfile,newfile_git)
         mdlink="images/"+os.path.basename(newfile)
         self.txtContent.append( f'![]({mdlink})')
         
@@ -454,20 +480,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             connection.close()
         print("batch saving images is OK")
     
-
-def create_html_table(rows):   
-    htmlpage =' <table  width="100%"  border="1" cellpadding="50" > '
-    for row in rows:
-        htmlpage += "<tr>"
-        #length=len(row)
-        #setWidth=90/length
-        for cell in row:
-            # default 两列表格 
-            htmlpage += ' <td  width="50%"  > {}   </td> '.format(cell)
-        htmlpage += "</tr>"
-    htmlpage += "</table>"
-    return htmlpage
-
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MyWindow()
