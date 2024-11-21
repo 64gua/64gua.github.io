@@ -173,3 +173,8 @@ td.text-center {
 td.text-right {
   text-align: right;
 }
+
+img   {
+  width: 100%;
+  height: auto;
+  }
