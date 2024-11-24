@@ -83,6 +83,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.act_generate_pics.triggered.connect(self.generatePics)
         self.act_save_new.triggered.connect(self.insertNewRecord)
         self.btn_wash.clicked.connect(self.washContent)
+        self.btn_del_image.clicked.connect(self.delete_useless_image)
         self.radioButton_html.toggled.connect(self.htmlformat)
         self.act_insert_data.triggered.connect(self.openNewWindow)
         self.spinBox.valueChanged.connect(self.displayImages)
@@ -168,7 +169,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         re1=r'images.+jpg|images.+.jpeg|images.+png'
         images=re.findall(re1,cont)
         num=len(images)
-        self.label_num_of_images.setText(f'{num}张图片')
+        self.label_num_of_images.setText(f'{num}张图')
         #self.spinBox.setMinimum(0)
         #self.spinBox.setMaximum(num-1)
         value=self.spinBox.value()
@@ -177,10 +178,12 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if value<0:
             value=0
         print("value:",value)
+        self.spinBox.setValue(value)
         if images:
             pixmap=QPixmap(images[value])
+            self.current_image=images[value]
         else:
-            pixmap=QPixmap("taiji.png")
+            pixmap=QPixmap("taiji.png")     
         self.label_pic.setPixmap(pixmap) 
 
 
@@ -225,6 +228,9 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     def drawPicture(self):
         print(" button draw is checked!")
+        if self.txtStockCode.text()=="NULL" or self.txtGuaDate.text()=="NULL":
+            QMessageBox.information(None, "警告", "缺少股票代号或日期？")
+            return
         if self.radioButton_365d.isChecked():
             self.drawpicMonth()
         else:
@@ -255,6 +261,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         new_content = self.txtContent.toPlainText()
         new_guaDate=self.txtGuaDate.text()
         new_subject=self.txtSubject.text()
+        print(new_content)
         connection = sqlite3.connect('Guas.db')
         cursor = connection.cursor()
         query='UPDATE StockGuas  SET guaDate="{}", stockName = "{}", guaName="{}", guaContent ="{}",guaSubject="{}"  WHERE rowid = {}  '.format( new_guaDate, new_stockCode, new_guaName, new_content, new_subject, rowid)
@@ -414,31 +421,26 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         defaultFile=mddir+filename
         print("defaultfile is : ", defaultFile)
         newfile, _ = diag.getSaveFileName(self, "保存文件", defaultFile, "jpg Files (*.jpg);; png file(*.png)", options=options)
-        #newfile_git="E:/git/64gua.github.io/images/"+os.path.basename(newfile)
+        newfile_git="E:/git/64gua.github.io/images/"+os.path.basename(newfile)
         print("save jpg as :", newfile)
         if newfile:
             src="temp100.jpg"
             shutil.copy(src, newfile)
-            #shutil.copy(newfile,newfile_git)
-            #print(newfile,newfile_git)
+            shutil.copy(newfile,newfile_git)
+            print(newfile,newfile_git)
         mdlink="images/"+os.path.basename(newfile)
         self.txtContent.append( f'![]({mdlink})')
         
-    '''
-    def deleteSamePics(self):
-        newfile=self.txtImg.text().replace("images/","")
-        mddir = "/youdaoMD/BBS/images/"
-        oldfiles=os.listdir(mddir)
-        posnew=newfile.rindex("_")
-        for file in oldfiles:
-            posold=file.rindex("_")
-            if file[0:posold] == newfile[0:posnew] and file != newfile:
-                QMessageBox.information(None, "警告", file+"发现与目前保存文件类似，需要删除？") 
-                print(mddir+file)
-                os.remove(mddir+file)
-                print(f"Deleted {file}")
-    '''
-
+    
+    def delete_useless_image(self):
+        basedir="c:/stock6yao/"
+        gitdir="E:/git/64gua.github.io/"
+        QMessageBox.information(None, "警告", self.current_image+"此图片即将删除，需要删除？") 
+        print(basedir+self.current_image)
+        os.remove(basedir+self.current_image)
+        os.remove(gitdir+self.current_image)
+        print(f"image in both folders: {self.current_image} has been Deleted! ")
+    
     def renewStockName(self):   #可以同时搜索股票和ETF
         code=self.txtStockCode.text()
         name=akPlot.findname_stock(code)
