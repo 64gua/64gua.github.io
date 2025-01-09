@@ -396,7 +396,7 @@ class Zhugua :
             if daygangzhi in values:
                 return key
 
-    def displayDoubleGuaText(self):  #前置条件必须设置了摇卦日期 setDate, 否则无法计算六神
+    def displayDoubleGuaText(self,has_yaochi=True):  #前置条件必须设置了摇卦日期 setDate, 否则无法计算六神
         textbuffer=[]
         textbuffer.append(f"时间: {self.datestring}" )
         textbuffer.append(f"干支: {self.dategangzhi}      (旬空: {self.xunkong} )" )        
@@ -420,9 +420,10 @@ class Zhugua :
                 str1=self.sixsheng[i]+"　"+self.fu_SixFamily[i]+self.fu_wuxing[i]+self.yaoline1[i]+"　"+ self.SixFamily1[i]+self.wuxing1[i]+"　"+ self.sy1[i]
                 textbuffer.append(str1)           
         index=self.guaname1
-        content1=dicIching[index]
-        for i in range(0,8):
-            textbuffer.append(content1[i])
+        if has_yaochi==True:
+            content1=dicIching[index]
+            for i in range(0,8):
+                textbuffer.append(content1[i])
         strContent=""
         for item in textbuffer:
             strContent=strContent+item+"\n"           
@@ -430,9 +431,10 @@ class Zhugua :
            
 def statistics():
     import csv
-    fp=open("兄子相生.csv","w",newline="")
+    #fp=open("兄子相生.csv","w",newline="")
+    fp=open("单爻动变化v2.csv","w",newline="")
     writer=csv.writer(fp)
-    list1=["主卦", " 变卦 " , " 动爻位置",    "主卦六亲"," 变卦六亲"]
+    list1=["卦名", "六亲变化"," 五行变化"]
     writer.writerow(list1)
     gua=Zhugua()
     day="2024-09-22"
@@ -442,15 +444,19 @@ def statistics():
         for num in gonglist:
             for i in range(0,6):
                 gua.makeGuaByDongyao(num, i+1)
-                sig=""
+                dongbian=""
                 if gua.wuxing1[5-i][1]==gua.wuxing2[5-i][1]:
                     if dizhiOrder.index(gua.wuxing1[5-i][0]) < dizhiOrder.index(gua.wuxing2[5-i][0]):
-                        sig="化进"
+                        dongbian=gua.SixFamily1[5-i][0]+"化进"
                     elif dizhiOrder.index(gua.wuxing1[5-i][0]) > dizhiOrder.index(gua.wuxing2[5-i][0]):
-                        sig="化退"
+                        dongbian=gua.SixFamily1[5-i][0]+"化退"
                     else:
-                        sig="伏吟"  
-                list2=[gua.guaname1, gua.guaname2, i+1, gua.SixFamily1[5-i], gua.SixFamily2 [5-i] ,gua.wuxing1[5-i],gua.wuxing2[5-i], sig  ]
+                        dongbian=gua.SixFamily1[5-i][0]+"伏吟"
+                else:
+                    dongbian=gua.SixFamily1[5-i][0]+"化"+gua.SixFamily2[5-i][0]
+                wuxing_change=gua.wuxing1[5-i][0]+"化"+gua.wuxing2[5-i][0]  
+                guaname_change=gua.guaname1+"之"+gua.guaname2              
+                list2=[guaname_change, dongbian,wuxing_change ]
                 print(list2)
                 writer.writerow(list2)             
     fp.close()
@@ -458,7 +464,7 @@ def statistics():
 
 def statistics_2_active():
     import csv
-    fp=open("testWu.csv","w",newline="")
+    fp=open("ghost_father.csv","w",newline="")
     writer=csv.writer(fp)
     # list1=["主卦", " 变卦 " , " 动爻位置",    "主卦六亲"," 变卦六亲"]
     # writer.writerow(list1)
@@ -471,31 +477,74 @@ def statistics_2_active():
             for i in range(0,6):
                 for j in range(i+1,6):
                     gua.makeGuaByDongyao2(num, i+1,j+1)
-                    sig="兄子相生"
+                    sig="官父连生"
                     six1=gua.SixFamily1[5-i]
+                    six12=gua.SixFamily2[5-i]
                     six2=gua.SixFamily1[5-j]
-                    if (six1=="兄弟" and six2=="子孙") or (six2=="兄弟" and six1=="子孙"):
+                    six22=gua.SixFamily2[5-j]
+                    if (six1=="官鬼" and six2=="父母") or (six2=="官鬼" and six1=="父母"):
                         list2=[gua.guaname1, gua.guaname2, sig ]
                         print(list2)
                         writer.writerow(list2)             
     fp.close()
     print("Statistic is finishing")     
+
+def statistics_ghost2son():
+    import csv
+    fp=open("testWu.csv","w",newline="")
+    writer=csv.writer(fp)
+    # list1=["主卦", " 变卦 " , " 动爻位置",    "主卦六亲"," 变卦六亲"]
+    # writer.writerow(list1)
+    gua=Zhugua()
+    day="2024-09-22"
+    gua.setDate(day)
+    for gong in range(1, 9):
+        gonglist=dicEightGongCode[gong]
+        for num in gonglist:
+            for i in range(0,6):
+                gua.makeGuaByDongyao(num, i+1)
+                sig="鬼化子"
+                dong_six=gua.SixFamily1[5-i]
+                bian_six=gua.SixFamily2[5-i]
+                if (dong_six=="官鬼" and bian_six=="子孙") :
+                    list2=[gua.guaname1, gua.guaname2, sig ]
+                    print(list2)
+                    writer.writerow(list2)             
+    fp.close()
+    print("Statistic is finishing")     
+
+def paipan(day_str,gua_name_str):
+    gua=Zhugua()
+    # day1=self.txtGuaDate.text()
+    # namestr=self.txtGuaName.text()
+    if day_str=="" or gua_name_str=="":
+        return  "错误操作：没有卦名和日期，无法排卦！"      
+    if '之' in gua_name_str:
+        split_string=gua_name_str.split('之')
+        name1 = split_string[0].strip() 
+        name2 = split_string[1].strip() 
+    else:
+        name1=gua_name_str.strip("静卦")
+        name2=name1
+    gzstring=gua.setDate(day_str)
+    gua.makeGuaByName(name1,name2)
+    outGuaName,guacont=gua.displayDoubleGuaText(has_yaochi=False)
+    return guacont
     
 if __name__ == "__main__": 
-    gua1=Zhugua()
+    # gua1=Zhugua()
     # #前置条件必须设置了摇卦日期 setDate
     day1="2023-05-15"
-    gzstring=gua1.setDate(day1)
-    # gua1.makeGuaByDongyao2(13, 2,3)
-    # #gua1.makeGuaByYaostring("131231")
-    gua1.makeGuaByName("旅","大有")
-    # # print("测试日期的干支演算: " +day1+"  "+gzstring)
-    # # print("**************************")
-    guaname, guacontent=gua1.displayDoubleGuaText()
-    # # print("**************************")
-    print(guaname)
-    print(guacontent)
-    #statistics_2_active()
+    # gzstring=gua1.setDate(day1)
+    # gua1.makeGuaByName("旅","大有")
+    # guaname, guacontent=gua1.displayDoubleGuaText(has_yaochi=False)
+    # print(guaname)
+    # print(guacontent)
+    guacont=paipan(day1,"旅之升")
+    print(guacont)
+    # statistics_2_active()
+    #statistics_ghost2son()
+    # statistics()
        
            
            

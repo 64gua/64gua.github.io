@@ -9,7 +9,7 @@ from decimal import Decimal
 import sqlite3
 import sixyao
 import akshare_plotly as akPlot
-import html, markdown
+import markdown
 
 main_ui = "db_search2.ui" # Enter file here.
 Ui_MainWindow, QtBaseClass = uic.loadUiType(main_ui)
@@ -69,19 +69,20 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_search.clicked.connect(lambda: self.loadInfo(1))
         self.btn_search_bytime.clicked.connect(lambda: self.loadInfo(0))
         self.btn_title.clicked.connect(lambda: self.loadInfo(2))
+        self.btn_empty_date.clicked.connect(lambda:self.loadInfo(3))
         self.btn_draw.clicked.connect(self.drawPicture)
         self.tableGua.cellDoubleClicked.connect(self.displayGua)
         self.btn_save_markdown.clicked.connect(self.saveAction)
         self.txtStockCode.editingFinished.connect(self.renewStockName)
         self.txtStockName.editingFinished.connect(self.renewStockCode)
-        self.btn_paipan.clicked.connect(self.paipan)
+        self.btn_paipan.clicked.connect(self.paipan_action)
         self.btn_save_img.clicked.connect(self.saveJPG)
         self.actDelete.triggered.connect(self.deleteWaste)
         self.actRemove.triggered.connect(self.removeRecord)
         self.act_all_in.triggered.connect(self.allInOneMarkdownHtml)
         self.act_new.triggered.connect(self.refreshText)
         self.act_generate_pics.triggered.connect(self.generatePics)
-        self.act_save_new.triggered.connect(self.insertNewRecord)
+        #self.act_save_new.triggered.connect(self.insertNewRecord)
         self.btn_wash.clicked.connect(self.washContent)
         self.btn_del_image.clicked.connect(self.delete_useless_image)
         self.radioButton_html.toggled.connect(self.htmlformat)
@@ -97,26 +98,43 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.mode=searchmode
         connection=sqlite3.connect('Guas.db')
         cursor=connection.cursor()
-        mainsql='select postTitle,guaDate, stockName,guaName,user,guaContent,CAST(rowid as text),guaSubject, cast(markdown as text) from StockGuas '
+        mainsql='select postTitle,guaDate, stockName,guaName,user,guaContent,CAST(rowid as text),guaSubject, gangZhi from StockGuas '
         orderby= '  order by cast( substr(guaDate,6,2) as integer),guaDate '
         if searchmode==1:  #按照卦名搜索
             self.txtTitle.setText("")
             self.txtEndDay.setText("")
             self.txtStartDay.setText("")
-            str=self.txtSearchGuaName.text().strip()
-            self.modestr=f'where guaName like "{str}"  '
+            str1=self.txtSearchGuaName.text().strip()
+            str2=self.txtSunMoon.text().strip()
+            str3=self.txtXunKong.text().strip()
+            mod1=""
+            mod2=""
+            mod3=""
+            if str1!="":
+                mod1=f'where guaName like "%{str1}%"  '
+            if str2!="":
+                mod2=f' and gangZhi like "%{str2}%"  '
+            if str3!="":
+                mod3=f' and xunKong like "%{str3}%"  '
+            self.modestr=mod1+mod2+mod3
         elif searchmode==0:  #按照时间段搜索
             self.txtSearchGuaName.setText("")
             self.txtTitle.setText("")
             startday=self.txtStartDay.text().strip()
             endday=self.txtEndDay.text().strip()
             self.modestr=f'where guaDate between"{startday}" and "{endday}"   ' 
-        elif searchmode==2:  #按照帖子标题搜索
+        elif searchmode==2:  #按照帖子标题或主题模糊搜索
             self.txtStartDay.setText("")
             self.txtEndDay.setText("")
             self.txtSearchGuaName.setText("")
             str=self.txtTitle.text().strip()
-            self.modestr=f'where guaSubject like "%{str}%"    ' 
+            self.modestr=f'where guaSubject like "%{str}%"   or  postTitle like "%{str}%"  ' 
+        elif searchmode==3:  #日期数据为空的数据
+            # self.txtStartDay.setText("")
+            # self.txtEndDay.setText("")
+            # self.txtSearchGuaName.setText("")
+            # str=self.txtTitle.text().strip()
+            self.modestr=f'where guaDate=="NULL"  and stockName!="增删" and stockName!="热点"   ' 
         query=mainsql+self.modestr+orderby
         print("query: ",query)
         result=cursor.execute(query)
@@ -185,7 +203,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             pixmap=QPixmap("taiji.png")     
         self.label_pic.setPixmap(pixmap) 
-
 
     def htmlformat(self):
         if self.radioButton_html.isChecked():
@@ -300,9 +317,13 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cont=re.sub(r'农历.*','',cont)
         cont=re.sub(r'.*元亨利贞网.*','',cont)
         cont=re.sub(r'出生.*性别[；：]','',cont)
+        cont=re.sub(r'神煞.*','',cont)
         cont=re.sub(r'\n{2}',"\n",cont)
         cont=cont.replace("?","")
         cont=cont.replace("<br>","\n")
+        guaname=self.txtGuaName.text()
+        # if "静卦" in guaname:
+        #     cont=re.sub(r'')
         self.txtContent.setPlainText(cont)
 
     def deleteWaste(self):
@@ -357,8 +378,10 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         list=[]
         totalContent=""
         for x in range(0,xsize):
-            cont=self.tableGua.item(x,5).text()
-            totalContent=totalContent+cont+"\n---\n"
+            stock=self.tableGua.item(x,2).text()
+            if stock!="热点" and stock!="无名" and stock!="NULL" :
+                cont=self.tableGua.item(x,5).text()
+                totalContent=totalContent+cont+"\n---\n"
             # 将文本字段内容转义为 HTML 格式
         #escaped_text = html.escape(totalContent)
         #html_cont = escaped_text.replace("\n", "<br>")
@@ -380,24 +403,11 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         print(html_file,html_file_git)
         # query='update StockGuas set markdown=1 where rowid={}  '.format(rowid)
             
-    def paipan(self):
-        gua=sixyao.Zhugua()
+    def paipan_action(self):
+        # gua=sixyao.Zhugua()
         day1=self.txtGuaDate.text()
         namestr=self.txtGuaName.text()
-        if day1=="" or namestr=="":
-            QMessageBox.information(None, "危险！", "没有卦名和日期，无法排卦！")
-            return        
-        if '之' in namestr:
-            split_string=self.txtGuaName.text().split('之')
-            name1 = split_string[0].strip() 
-            name2 = split_string[1].strip() 
-        else:
-            name1=namestr.strip("静卦")
-            name2=namestr.strip("静卦")
-        gzstring=gua.setDate(day1)
-        gua.makeGuaByName(name1,name2)
-        #outname,guacont=gua.displayDoubleGuaText()
-        outGuaName,guacont=gua.displayDoubleGuaText()
+        guacont=sixyao.paipan(day1,namestr)
         self.txtContent.append(guacont)
 
     def refreshText(self):
@@ -449,7 +459,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def renewStockCode(self):  #可以同时搜索股票和ETF
         name=self.txtStockName.text()
         code=akPlot.findcode_stock(name)
-        code=code.replace("sh","").replace("sz","")
+        # code=code.replace("sh","").replace("sz","")
         self.txtStockCode.setText(code)
 
     def generatePics(self):
