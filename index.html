@@ -208,14 +208,14 @@ function validate() {
     return;
   }
   if (username=="admin" && password=="123456") {
-    alert("登录成功")
-    //window.open("finished.html")
+    alert("登录成功");
     document.getElementById('searchDiv').style.display='block';
-    
+    window.open("finished.html");
+    return
   }  
   else {
     alert("用户名和密码错误")
-    
+    return
   }
 }
 </script>
