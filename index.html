@@ -1,226 +1,394 @@
-
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<title>6yao world for stock</title>
-<meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; width=device-width;">
-<link rel="stylesheet" type="text/css" href="style.css">
-<style>  
-  #searchDiv {
-    display: none;
-  }
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📈 新浪股票K线 · 前10条</title>
+    <!-- 引入独立JS模块 (全部核心逻辑在此) -->
+    <script src="stockAPI.js" defer></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            max-width: 880px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            padding: 30px 32px 40px;
+            transition: 0.2s;
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 1.9rem;
+            margin-top: 0;
+            margin-bottom: 6px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sub {
+            color: #64748b;
+            margin-top: -6px;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 14px;
+            background: #f8fafc;
+            border-radius: 0 12px 12px 0;
+            line-height: 1.5;
+        }
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 18px;
+            background: #f9fafb;
+            padding: 20px 22px;
+            border-radius: 24px;
+            margin-bottom: 28px;
+            align-items: flex-end;
+            border: 1px solid #e9edf2;
+        }
+        .field {
+            flex: 1 0 140px;
+            min-width: 120px;
+        }
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+        .field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            background: white;
+            transition: 0.15s;
+            outline: none;
+        }
+        .field input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn:hover {
+            background: #0f172a;
+            transform: scale(1.02);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+        .status {
+            margin: 12px 0 18px 0;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            background: #f1f5f9;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .status .badge {
+            background: #3b82f6;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid #eef2f6;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 540px;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+            padding: 14px 12px;
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #edf2f7;
+            color: #1e293b;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .highlight {
+            background: #fafcff;
+        }
+        .empty-message {
+            padding: 30px 0;
+            text-align: center;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .error-message {
+            color: #b91c1c;
+            background: #fee2e2;
+            padding: 8px 18px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .footnote {
+            margin-top: 18px;
+            color: #64748b;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+        .stock-code-hint {
+            background: #eef2ff;
+            border-radius: 30px;
+            padding: 2px 14px;
+            font-size: 0.75rem;
+            color: #4338ca;
+        }
+        @media (max-width: 640px) {
+            .card { padding: 20px; }
+            .input-row { flex-direction: column; align-items: stretch; }
+            .btn { margin-left: 0; justify-content: center; }
+        }
+    </style>
 </head>
-
 <body>
-<h1>六爻的世界</h1>
-<h1> 6 yao maravilloso</h1>
+<div class="card">
+    <h1>
+        <span>📊 K线数据</span>
+        <span style="font-size: 0.9rem; background: #eef2ff; padding: 2px 14px; border-radius: 60px; color: #1e40af; font-weight: 500;">新浪API</span>
+    </h1>
+    <div class="sub">输入股票代码 &amp; 日期范围 · 点击获取前10条K线 (日线)</div>
 
-<table class="table-fill">
-<thead>
-<tr>
-<th colspan="5" class="lightred">妻财持世</th>
-</tr>
-</thead>
-<tbody class="table-hover">
-<tr>
-<td class="text-left"><a href="否.html" target="_blank">天地否</a></td>
-<td class="text-left"><a href="随.html" target="_blank">泽雷随</a></td>
-<td class="text-left"> <a href="困.html" target="_blank">泽水困</a> </td>
-<td class="text-left"><a href="噬嗑.html" target="_blank" >火雷噬嗑 </a> </td>
-<td class="text-left"><a href="震.html" target="_blank">震为雷</a></td>
-</tr>
-<tr>
-<td class="text-left"><a href="解.html" target="_blank">雷水解</a></td>
-<td class="text-left"><a href="豫.html" target="_blank">雷地豫 </a> </td>
-<td class="text-left"><a href="家人.html" target="_blank"> 风火家人 </a></td>
-<td class="text-left"><a href="益.html" target="_blank">风雷益</td>
-<td class="text-left"><a href="节.html" target="_blank">水泽节</a></td>
-</tr>
-<tr>
-<td class="text-left"><a href="井.html" target="_blank">水风井</a> </td>
-<td class="text-left"><a href="颐.html" target="_blank">山雷颐 </a> </td>
-<td class="text-left"><a href="复.html" target="_blank">地雷复</a></td>
-<td class="text-left"><a href="升.html" target="_blank">地风升</a></td>
-<td class="text-left"><a href="师.html" target="_blank">地水师 </a> </td>
-</tr>
-</tbody>
-</table>
-<br>
-<table class="table-fill">
-  <thead>
-  <tr>
-  <th colspan="5" class="lightgreen">兄弟持世</th>
-  </tr>
-  </thead>
-  <tbody class="table-hover">
-  <tr>
-  <td class="text-left">  <a href="讼.html" target="_blank">天水讼</a></td>
-  <td class="text-left"><a href="革.html" target="_blank">泽火革 </a> </td>
-  <td class="text-left"> <a href="咸.html" target="_blank">泽山咸</a> </td>
-  <td class="text-left"><a href="离.html" target="_blank">离为火 </a></td>
-  <td class="text-left"><a href="未济.html" target="_blank">火水未济</a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="晋.html" target="_blank">火地晋</a></td>
-  <td class="text-left"><a href="中孚.html" target="_blank">风泽中孚</a> </td>
-  <td class="text-left"><a href="巽.html" target="_blank">巽为风</a></td>
-  <td class="text-left"><a href="涣.html" target="_blank">风水涣</a></td>
-  <td class="text-left"><a href="既济.html" target="_blank">水火既济</a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="坎.html" target="_blank">坎为水</a></td>
-  <td class="text-left"> <a href="蹇.html" target="_blank">水山蹇</a> </td>
-  <td class="text-left"><a href="损.html" target="_blank">山泽损</a></td>
-  <td class="text-left"><a href="泰.html" target="_blank">地天泰</a></td>
-  <td class="text-left">  </td>
-  </tr>
-  </tbody>
-  </table>
-<br>
+    <!-- 输入区域 -->
+    <div class="input-row">
+        <div class="field">
+            <label for="stockInput">📌 股票代码</label>
+            <input type="text" id="stockInput" placeholder="例如: 600000 或 sh600000" value="600000">
+        </div>
+        <div class="field">
+            <label for="startInput">📅 开始日期</label>
+            <input type="date" id="startInput" value="2026-06-01">
+        </div>
+        <div class="field">
+            <label for="endInput">📅 结束日期</label>
+            <input type="date" id="endInput" value="2026-07-03">
+        </div>
+        <button class="btn" id="fetchBtn">🔍 获取数据</button>
+    </div>
 
-<table class="table-fill">
-  <thead>
-  <tr>
-  <th colspan="5" class="text-center">子孙持世</th>
-  </tr>
-  </thead>
-  <tbody class="table-hover">
-  <tr>
-  <td class="text-left"><a href="履.html" target="_blank">天泽履 </a></td>
-  <td class="text-left"><a href="无妄.html" target="_blank">天雷无妄 </a></td>
-  <td class="text-left"> <a href="夬.html" target="_blank">泽天夬  </a></td>
-  <td class="text-left"> <a href="睽.html" target="_blank">火泽睽  </a></td>
-  <td class="text-left"><a href="渐.html" target="_blank">风山渐 </a>  </td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="屯.html" target="_blank">水雷屯</a> </td>
-  <td class="text-left"> <a href="旅.html" target="_blank">火山旅</a></td>
-  <td class="text-left"><a href="需.html" target="_blank">水天需</a></td>
-  <td class="text-left"><a href="蒙.html" target="_blank">山水蒙</a></td>
-  <td class="text-left"><a href="剥.html" target="_blank">山地剥</a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="谦.html" target="_blank">地山谦</a></td>
-  <td class="text-left"><a href="坤.html" target="_blank">坤为地</a></td>
-  <td class="text-left"></td>
-  <td class="text-left"></td>
-  <td class="text-left">  </td>
-  </tr>
-  </tbody>
-  </table>
+    <!-- 状态栏 -->
+    <div class="status" id="statusBar">
+        <span>⚡ 等待查询</span>
+        <span class="badge" id="countBadge">0 条</span>
+    </div>
 
-<br>
-<table class="table-fill">
-  <thead>
-  <tr>
-  <th colspan="5" class="lightgreen">官鬼持世</th>
-  </tr>
-  </thead>
-  <tbody class="table-hover">
-  <tr>
-  <td class="text-left"><a href="同人.html" target="_blank">天火同人</a></td>
-  <td class="text-left"><a href="遁.html" target="_blank">天山遁</a> </td>
-  <td class="text-left"> <a href="萃.html" target="_blank">泽地萃 </a> </td>
-  <td class="text-left"><a href="鼎.html" target="_blank">火风鼎</a></td>
-  <td class="text-left"><a href="恒.html" target="_blank">雷风恒</a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="小过.html" target="_blank">雷山小过</a></td>
-  <td class="text-left"><a href="比.html" target="_blank"> 水地比 </a> </td>
-  <td class="text-left"><a href="大畜.html" target="_blank">山天大畜</a></td>
-  <td class="text-left"><a href="贲.html" target="_blank">山火贲</a></td>
-  <td class="text-left"><a href="蛊.html" target="_blank">山风蛊</a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="艮.html" target="_blank">艮为山</a> </td>
-  <td class="text-left"><a href="临.html" target="_blank">地泽临 </a> </td>
-  <td class="text-left"><a href="明夷.html" target="_blank">地火明夷 </a></td>
-  <td class="text-left"></td>
-  <td class="text-left"></td>
-  </tr>
-  </tbody>
-  </table>
-<br>
-
-
-<table class="table-fill">
-  <thead>
-  <tr>
-  <th colspan="5" class="lightyellow">父母持世</th>
-  </tr>
-  </thead>
-  <tbody class="table-hover">
-  <tr>
-  <td class="text-left"><a href="乾.html" target="_blank">乾为天</a></td>
-  <td class="text-left"><a href="姤.html" target="_blank">天风姤 </a> </td>
-  <td class="text-left"><a href="兑.html" target="_blank">兑为泽  </a>  </td>
-  <td class="text-left"><a href="大过.html" target="_blank">泽风大过  </a> </td>
-  <td class="text-left"><a href="大有.html" target="_blank">火天大有  </a></td>
-  </tr>
-  <tr>
-  <td class="text-left"><a href="大壮.html" target="_blank"> 雷天大壮   </a></td>
-  <td class="text-left"> <a href="归妹.html" target="_blank"> 雷泽归妹  </a></td>
-  <td class="text-left"><a href="丰.html" target="_blank"> 雷火丰   </a> </td>
-  <td class="text-left"><a href="小畜.html" target="_blank"> 风天小畜  </a> </td>
-  <td class="text-left"><a href="观.html" target="_blank"> 风地观        </a>  </td>
-  </tr>
-  </tbody>
-  </table>
-<br>
-<table class="table-fill">
-<thead>
-<tr><th colspan="5" class="lightblack">四大凶卦</th></tr>
-</thead>
-<tbody class="table-hover">
-<tr>
-  <td> <a href="蹇.html" target="_blank">水山蹇</a> </td>
-  <td> <a href="坎.html" target="_blank">坎为水</a> </td>
-  <td> <a href="困.html" target="_blank">泽水困</a></td>
-  <td> <a href="屯.html" target="_blank">水雷屯</a> </td>
-</tr>
-</tbody>
-</table>
-<br>
-<img src="64gua_by_gong.png" >
-<br>
-<p> 友情链接：</p>
-<p> <a href="https://www.mingtianji.com/2021/05/28/2061/" target="_blank">高岛易断800例查询</a></p>
-<p> <a href="https://tjxsgw.com/iching/buyi/" target="_blank">增删卜易-顺为版</a></p> 
-<p> <a href="https://www.mingtianji.com/zengshanboyi/" target="_blank">增删卜易-明天机版</a>  </p>
-<p> <a href="https://www.zhonghuadiancang.com/xuanxuewushu/zengshanboyi/"  target="_blank">增删卜易-中华典藏</a> </p>
-<br>
-<div style="text-align:center;vertical-align:middle;"> 
-  <label >用户名 </label> <input id="username"  type="text" > <br/>
-  <label >密的码 </label> <input id="password"  type="password" >  <br/>
-  <button onclick="validate()"> 登录</button> </br>
+    <!-- 表格容器 -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>📅 日期</th>
+                    <th>开盘</th>
+                    <th>最高</th>
+                    <th>最低</th>
+                    <th>收盘</th>
+                    <th>成交量</th>
+                </tr>
+            </thead>
+            <tbody id="dataBody">
+                <tr><td colspan="6" class="empty-message">暂无数据，输入条件后点击获取</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="footnote">
+        <span>💡 显示前10条 (按日期升序)</span>
+        <span class="stock-code-hint">支持 sh/sz 前缀 · 自动识别</span>
+    </div>
 </div>
-<div id="searchDiv"  style="text-align:center;vertical-align:middle;">  <label >搜索框</label> <input id="searchBox"  type="Text" >  <br/></div>
-
 
 <script>
-function validate() {
-  var username=document.getElementById('username').value;
-  var password=document.getElementById('password').value;
-  if (username==""||password =="") {
-    alert("用户名和密码不能为空");
-    return;
-  }
-  if (username=="admin" && password=="123456") {
-    alert("登录成功");
-    document.getElementById('searchDiv').style.display='block';
-    window.open("finished.html");
-    return
-  }  
-  else {
-    alert("用户名和密码错误")
-    return
-  }
-}
-</script>
+    // 页面逻辑 (只负责UI交互，调用StockAPI)
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查 StockAPI 是否加载
+        const stockAPI = window.StockAPI;
+        if (!stockAPI) {
+            document.getElementById('statusBar').innerHTML = 
+                `<span>❌ 错误: stockAPI.js 未加载，请检查文件是否存在</span>`;
+            return;
+        }
 
-<p>版权所有： @ FelizTio时空量化  </p>
+        // DOM 元素
+        const stockInput = document.getElementById('stockInput');
+        const startInput = document.getElementById('startInput');
+        const endInput = document.getElementById('endInput');
+        const fetchBtn = document.getElementById('fetchBtn');
+        const dataBody = document.getElementById('dataBody');
+        const statusBar = document.getElementById('statusBar');
+        const countBadge = document.getElementById('countBadge');
+
+        // 辅助：更新状态
+        function setStatus(msg, isError = false, count = null) {
+            const span = statusBar.querySelector('span:first-child');
+            if (span) span.innerHTML = msg;
+            if (count !== null) {
+                countBadge.textContent = count + ' 条';
+            } else {
+                countBadge.textContent = '--';
+            }
+            if (isError) {
+                statusBar.style.background = '#fee2e2';
+                statusBar.style.color = '#991b1b';
+            } else {
+                statusBar.style.background = '#f1f5f9';
+                statusBar.style.color = '#334155';
+            }
+        }
+
+        // 渲染表格 (前10条)
+        function renderTable(dataArray) {
+            dataBody.innerHTML = '';
+            if (!dataArray || dataArray.length === 0) {
+                dataBody.innerHTML = `<tr><td colspan="6" class="empty-message">📭 没有匹配的数据</td></tr>`;
+                return;
+            }
+
+            // 只取前10条
+            const top10 = dataArray.slice(0, 10);
+            for (const item of top10) {
+                const row = document.createElement('tr');
+                const open = item.open?.toFixed?.(2) ?? item.open ?? '—';
+                const high = item.high?.toFixed?.(2) ?? item.high ?? '—';
+                const low = item.low?.toFixed?.(2) ?? item.low ?? '—';
+                const close = item.close?.toFixed?.(2) ?? item.close ?? '—';
+                const volume = item.volume ? Math.round(item.volume).toLocaleString() : '—';
+                row.innerHTML = `
+                    <td><strong>${item.date || '—'}</strong></td>
+                    <td>${open}</td>
+                    <td>${high}</td>
+                    <td>${low}</td>
+                    <td>${close}</td>
+                    <td>${volume}</td>
+                `;
+                dataBody.appendChild(row);
+            }
+
+            if (dataArray.length > 10) {
+                const footRow = document.createElement('tr');
+                footRow.style.background = '#fafafa';
+                footRow.innerHTML = `<td colspan="6" style="color:#64748b; font-size:0.8rem; padding:8px;">... 还有 ${dataArray.length - 10} 条未显示 (仅展示前10)</td>`;
+                dataBody.appendChild(footRow);
+            }
+        }
+
+        // 主获取逻辑 (调用 StockAPI)
+        async function fetchKData() {
+            const stockCode = stockInput.value.trim();
+            const startDate = startInput.value;
+            const endDate = endInput.value;
+
+            if (!stockCode) {
+                setStatus('❌ 请输入股票代码', true);
+                return;
+            }
+            if (!startDate || !endDate) {
+                setStatus('❌ 请选择完整的日期范围', true);
+                return;
+            }
+            if (startDate > endDate) {
+                setStatus('❌ 开始日期不能晚于结束日期', true);
+                return;
+            }
+
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = '⏳ 加载中...';
+            setStatus('⏳ 正在请求新浪API ...', false);
+
+            try {
+                // 调用 StockAPI.getKLineData (所有核心逻辑在 stockAPI.js 中)
+                const result = await stockAPI.getKLineData(stockCode, startDate, endDate);
+
+                if (result && result.length > 0) {
+                    setStatus(`✅ 获取成功 (共 ${result.length} 条)`, false, result.length);
+                    renderTable(result);
+                } else {
+                    setStatus('⚠️ 未获取到数据 (可能日期范围无记录)', false, 0);
+                    renderTable([]);
+                }
+            } catch (err) {
+                console.error('获取数据失败:', err);
+                setStatus(`❌ 错误: ${err.message || '网络异常'}`, true);
+                renderTable([]);
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtn.textContent = '🔍 获取数据';
+            }
+        }
+
+        // 绑定事件
+        fetchBtn.addEventListener('click', fetchKData);
+        document.querySelectorAll('.field input').forEach(inp => {
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') fetchBtn.click();
+            });
+        });
+
+        // 自动加载示例
+        setTimeout(() => fetchBtn.click(), 300);
+    });
+</script>
 </body>
 </html>
-
