@@ -28,6 +28,7 @@ class MyWindow2(QtWidgets.QMainWindow, Ui_MainWindow2):
         Ui_MainWindow2.__init__(self)
         self.setupUi(self)
         self.btn_insert.clicked.connect(self.insert_data)
+        self.btn_insert_2.clicked.connect(self.insert_data2)
 
     def insert_data(self):
         cont=self.textEdit.toPlainText()
@@ -60,6 +61,45 @@ class MyWindow2(QtWidgets.QMainWindow, Ui_MainWindow2):
             conn.commit()
             conn.close()
         self.btn_insert.setText("填加成功")
+
+    def insert_data2(self):
+        cont=self.textEdit.toPlainText()
+        lines=cont.splitlines()
+        i=0
+        for line in lines:
+            i=i+1
+            #print(line)
+            if "," in line:
+                items=line.split(",")
+            else:
+                items=line.split("，")
+            print(items)
+            #csv文件格式为卦名，日期 时间，东方财富-本周走势.三个字段，分离出相关字段。
+            gua=items[0]
+            day=items[1].split(" ")[0]     #具体日期如2026-06-24
+            if " " in day:                    #如果有空格，则分离出时与分
+                exacttime=items[1].split(" ")[1]   #3时5分 或3：45
+            else:
+                exacttime=""
+            origincode=items[2].split("-")[0]
+            subject=items[2].split("-")[1]
+            code,name=codeToName.get_stock_tuple(origincode)
+            subject=name+subject+exacttime
+            #content=sixyao.paipan(day1,namestr)
+            query = (gua,code,day)
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM stockGuas WHERE guaName=? and stockName=? and guaDate=?   ',query)
+            db_result=cursor.fetchall()
+            if len(db_result)==0:
+                tuple=(gua, day,code,subject)
+                cursor.execute("INSERT INTO stockGuas (guaName, guaDate,stockname,guaSubject)  VALUES (?,?,?,?)", tuple )
+                print(i,'插入新数据csv record inserted Successfully')
+            else:
+                print(i, "原记录已经存在，不会重新插入!......")
+            conn.commit()
+            conn.close()
+        self.btn_insert.setText("填加成功")
    
 class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 #class MyWindow(QtBaseClass, Ui_MainWindow):
@@ -84,7 +124,6 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actRemove.triggered.connect(self.removeRecord)
         self.act_all_in.triggered.connect(self.allInOneMarkdownHtml)
         self.act_new.triggered.connect(self.refreshText)
-        # self.act_generate_pics.triggered.connect(self.generatePics)
         self.act_add_ganzhi.triggered.connect(self.addGanZhi)
         self.btn_wash.clicked.connect(self.washContent)
         self.btn_del_image.clicked.connect(self.delete_useless_image)

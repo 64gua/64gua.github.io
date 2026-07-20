@@ -14,8 +14,8 @@ class Ktype(str, Enum):
     DAILY = "日K"
     WEEKLY = "周K"
     MONTHLY = "月K"
-
-TDX_PATH="C:/ZhaoShang"   #通达信安装目录，读取其中K线数据文件 --如：sh600036.day 
+#   d:\zd_zsone\vipdoc\sh\lday
+TDX_PATH="D:/zd_zsone"   #通达信安装目录，读取其中K线数据文件 --如：sh600036.day 
 
 # ==========================================
 # 第一部分：四大底层驱动函数（由你之前的代码改造）,

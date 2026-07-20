@@ -11,7 +11,7 @@ from datetime import datetime
 import sqlite3                                                     
 import codeToName
 import sixyao
-import akshare_plotly as akPlot
+#import akshare_plotly as akPlot
 from  dataSourcePlotly import drawKline
 from  dataSource import Ktype
 import markdown
@@ -20,7 +20,7 @@ import add_ganzhi_field
 DB_NAME='Guas.db'
 main_ui = "db_search_v3.ui" # Enter file here.
 Ui_MainWindow, QtBaseClass = uic.loadUiType(main_ui)
-insert_ui="insert_db_v31.ui"
+insert_ui="insert_db.ui"
 Ui_MainWindow2, QtBaseClass2 = uic.loadUiType(insert_ui)
 
 class MyWindow2(QtWidgets.QMainWindow, Ui_MainWindow2):
@@ -29,8 +29,42 @@ class MyWindow2(QtWidgets.QMainWindow, Ui_MainWindow2):
         Ui_MainWindow2.__init__(self)
         self.setupUi(self)
         self.btn_insert.clicked.connect(self.insert_data)
+        self.btn_insert_2.clicked.connect(self.insert_data2)
 
-    def insert_data(self):
+    def insert_data(self): #CSV字段为老式四字段
+        cont=self.textEdit.toPlainText()
+        lines=cont.splitlines()
+        i=0
+        for line in lines:
+            i=i+1
+            #print(line)
+            if "," in line:
+                items=line.split(",")
+            else:
+                items=line.split("，")
+            print(items)
+            gua=items[0]
+            day=items[1]
+            code=items[2]
+            subject=items[3]
+            #content=sixyao.paipan(day1,namestr)
+            query = (gua,code,day)
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM stockGuas WHERE guaName=? and stockName=? and guaDate=?   ',query)
+            db_result=cursor.fetchall()
+            if len(db_result)==0:
+                tuple=(gua, day,code,subject)
+                cursor.execute("INSERT INTO stockGuas (guaName, guaDate,stockname,guaSubject)  VALUES (?,?,?,?)", tuple )
+                print(i,'csv record inserted Successfully')
+            else:
+                print(i, "Record already exists!......")
+            conn.commit()
+            conn.close()
+        self.btn_insert.setText("填加成功")
+
+
+    def insert_data2(self):   #CSV字段为手工输入三字段，省时间
         cont=self.textEdit.toPlainText()
         lines=cont.splitlines()
         i=0
@@ -467,7 +501,7 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
     def generatePics(self):
         xsize=self.tableGua.rowCount() 
-        mddir="C:/stock6yao/images/"
+        mddir="d:/64gua.github.io/images/"
         #ysize=self.tableGua.columnCount()
         #self.drawType="D"
         for x in range(0,xsize):        
@@ -476,18 +510,18 @@ class MyWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             rawStock=self.tableGua.item(x,2).text()
             guaContent=self.tableGua.item(x,5).text()
             rowid = self.tableGua.item(x, 6).text()
-            stockCode,stockName=code2name.extractStockName(rawStock)
+            stockCode,stockName=codeToName.get_stock_tuple(rawStock)
             re1=r'images.+jpg|images.+.jpeg|images.+png'
             images=re.findall(re1,guaContent)
             num=len(images)
             if stockCode=="NULL" or stockName=="NULL":
-                stockCode,stockName=code2name.extractStockName(postTitle) 
+                stockCode,stockName=codeToName.get_stock_tuple(postTitle) 
             if stockCode=="NULL" or num>0:
                 continue
             else:
-                scr=akPlot.drawDailyLine(stockCode,stockDate,35)
+                src=drawKline(stockCode,stockDate,Ktype.DAILY,before=10,after=35,source="baostock")
                 #pixmap=QPixmap(imgfile)
-                filename=stockCode+"_"+stockDate+"_35d.jpg"
+                filename=stockCode+"_"+stockDate+"_30d.jpg"
                 # print(rowid,stockCode,stockDate,filename )
                 newfile=mddir+filename
               #  newfile_git="D:/git/64gua.github.io/images/"+filename

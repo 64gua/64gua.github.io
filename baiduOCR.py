@@ -414,7 +414,7 @@ def clear_first_column(csv_name):
 
 if __name__ == "__main__":
     # 批量识别指定文件夹
-    image_folder = "C:/Users/1/Desktop/wechatImage/0706"
+    image_folder = "C:/Users/Administrator/Desktop/wechatImage/0714"
     output_csv = image_folder+"/result_first.csv"
     # process_all_images(image_folder, output_csv)
     clear_first_column(output_csv)
